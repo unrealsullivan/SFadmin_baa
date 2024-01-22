@@ -1,0 +1,47 @@
+---
+
+- hosts: test
+  become: yes
+  vars:
+      logFile: "{{ 'LogFile=/var/log/zabbix-agent/zabbix_agentd.log' if ansible_distribution == 'Ubuntu' else 'LogFile=/var/log/zabbix/zabbix_agentd.conf'}}"
+      installPath: "{{ '/etc/zabbix/zabbix_agentd.conf' if ansible_distribution == 'Ubuntu' else '/etc/zabbix_agentd.conf'}}"
+  tasks:
+  -  name: Install zabbix-agent on RedHat Family
+     yum:
+        name=zabbix-agent
+        state=latest
+     when:
+        ansible_os_family == "RedHat"
+     notify:
+        zabbix-agent systemd
+        
+  -  name: Install zabbix-agent on Debian Family
+     apt:
+        name=zabbix-agent
+        state=latest
+     when:
+        ansible_os_family == "Debian"
+     notify:
+        zabbix-agent systemd
+
+  -  name: Copying config file
+     template:
+             src: /etc/ansible/common/files/zabbix_agentd.conf
+             dest: "{{installPath}}"
+
+  -  name: Writing hostnames
+     lineinfile:
+      path: "{{installPath}}"
+      insertafter: '^# Hostname='
+      line: Hostname={{ansible_hostname}}
+  -  name: Writing log file directory
+     lineinfile:
+      path: "{{installPath}}"
+      insertafter: '^# LogFile='
+      line: "{{logFile }}"
+  handlers:
+  -  name: zabbix-agent systemd
+     systemd:
+      name: zabbix-agent.service
+      enabled: yes
+      state: restarted
