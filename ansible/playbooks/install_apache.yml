@@ -1,0 +1,31 @@
+---
+
+- hosts: ubuntu2.my
+  become: yes
+  vars:
+      serviceName: "{{ 'apache2' if ansible_distribution == 'Ubuntu' else 'httpd' }}"
+  tasks:
+   - name: Install httpd on RedHat Family
+     yum: 
+          name="{{serviceName}}"
+          state=latest
+     when:
+          ansible_os_family == "RedHat"
+     notify:
+            httpd systemd
+        
+   - name: Install apache2 on Debian Family
+     apt:
+        name="{{serviceName}}"
+        state=latest
+     when:
+        ansible_os_family == "Debian"
+     notify:
+        apache2 systemd
+
+  handlers:
+  -  name: apache2 systemd
+     systemd:
+       name: apache2.service
+       enabled: no
+       state: stopped

@@ -1,10 +1,10 @@
 ---
 
-- hosts: test
+- hosts: centos
   become: yes
   vars:
       logFile: "{{ 'LogFile=/var/log/zabbix-agent/zabbix_agentd.log' if ansible_distribution == 'Ubuntu' else 'LogFile=/var/log/zabbix/zabbix_agentd.conf'}}"
-      installPath: "{{ '/etc/zabbix/zabbix_agentd.conf' if ansible_distribution == 'Ubuntu' else '/etc/zabbix_agentd.conf'}}"
+      installPath: "{{ '/etc/zabbix/zabbix_agentd.conf' }}"
   tasks:
   -  name: Install zabbix-agent on RedHat Family
      yum:
@@ -26,7 +26,7 @@
 
   -  name: Copying config file
      template:
-             src: /etc/ansible/common/files/zabbix_agentd.conf
+             src: /home/monolith/git/ansible/common/files/zabbix_agentd.conf
              dest: "{{installPath}}"
 
   -  name: Writing hostnames
